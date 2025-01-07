@@ -1,3 +1,4 @@
+from rest_framework.decorators import action
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
@@ -17,9 +18,28 @@ class QuoteViewSet(viewsets.ModelViewSet):
     queryset = Quote.objects.all()
     serializer_class = QuoteSerializer
 
+    @action(detail=True, methods=['patch'], url_path='like')
+    def like(self, request, pk=None):
+        """
+        Custom action to increment the 'likes' field of a specific quote.
+        """
+        try:
+            # Retrieve the quote with the given ID (primary key).
+            quote = self.get_object()
+            quote.likes += 1
+            quote.save()
+            return Response(quote.likes, status=status.HTTP_200_OK)
+
+        except Quote.DoesNotExist:
+            return Response({'error': 'Quote not found'}, status=status.HTTP_404_NOT_FOUND)
+
+
 class RandomQuoteView(APIView):
+    def get(self, request, *args, **kwargs):
+        request._full_data = []
+        return self.post(request, *args, **kwargs)
+
     def post(self, request, *args, **kwargs):
-        # Get the list of IDs that should be excluded
         ids_to_exclude = request.data
         logging.info(f"Fetch a random Quote, skipping ids {ids_to_exclude}")
 
@@ -34,25 +54,20 @@ class RandomQuoteView(APIView):
             self.fetch_and_add_zenquotes_to_db()
             logging.info(f'Number of quotes in the database after adding quotes from ZenQuotes API: {Quote.objects.count()}')
 
-
-        # Query the quotes, excluding the given IDs
         remaining_quotes = Quote.objects.exclude(id__in=ids_to_exclude)
 
-        if (remaining_quotes < 2):
+        if (len(remaining_quotes) < 2):
             logging.info(f'Start fetching quotes almost all database quotes ({Quote.objects.count()}) are excluded {len(ids_to_exclude)}')
             self.fetch_and_add_zenquotes_to_db()
             remaining_quotes = Quote.objects.exclude(id__in=ids_to_exclude)
             logging.info(f'Number of quotes in the database after adding quotes from ZenQuotes API: {Quote.objects.count()}')
 
-        # If there are no remaining quotes, return an appropriate message
         if not remaining_quotes.exists():
             return Response({"message": "No quotes are available."},
                             status=status.HTTP_404_NOT_FOUND)
 
-        # Pick a random quote from the remaining ones
         random_quote = random.choice(remaining_quotes)
 
-        # Serialize the random quote
         serializer = QuoteSerializer(random_quote)
 
         return Response(serializer.data, status=status.HTTP_200_OK)
@@ -62,14 +77,11 @@ class RandomQuoteView(APIView):
         url = 'https://zenquotes.io/api/quotes'
 
         try:
-            # Fetch quotes from the API
             response = requests.get(url)
-            response.raise_for_status()  # Check for HTTP request errors
+            response.raise_for_status()  # throw Exception for HTTP request errors
 
-            # Parse the JSON response
             quotes = response.json()
 
-            # Save each quote into the database
             saved_quotes = []
             for quote_data in quotes:
                 zen_quote_text = quote_data.get('q')  # Quote text field from the API
@@ -81,7 +93,6 @@ class RandomQuoteView(APIView):
                     saved_quotes.append(quote)
 
         except requests.RequestException as e:
-            # Handle any request errors with an appropriate HTTP error message
             logging.error("Failed to fetch data from ZenQuotes API: %s", e, exc_info=True)
         except Exception as e:
             logging.error("An unexpected error occurred.", e, exc_info=True)

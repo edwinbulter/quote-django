@@ -4,11 +4,14 @@ GET https://zenquotes.io/api/quotes
 ### fetch random quote from zen
 GET https://zenquotes.io/api/random
 
+### fetch a specific quote with GET
+GET http://localhost:8000/api/v1/quote/5
+
 ### fetch all quotes with GET
 GET http://localhost:8000/api/v1/quotes
 
 ### fetch random quote with GET
-GET http://localhost:8000/api/quote
+GET http://localhost:8000/api/v1/quote
 
 ### fetch random quote with POST and idsToExclude
 POST http://localhost:8000/api/v1/quote
@@ -17,7 +20,7 @@ Content-Type: application/json
 [1,2,3,4,5]
 
 ### like a quote with PATCH and id
-PATCH http://localhost:8180/api/v1/quote/5/like
+PATCH http://localhost:8000/api/v1/quote/5/like/
 
 
 
