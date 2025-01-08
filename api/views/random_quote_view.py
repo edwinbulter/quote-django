@@ -1,38 +1,15 @@
-from rest_framework.decorators import action
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework import status
-from rest_framework import viewsets
-from .models import Quote
-from .serializers import QuoteSerializer
-import random
-import requests
 import logging
+import random
 
-logging.basicConfig(
-    level=logging.DEBUG,  # Set the logging level, e.g., DEBUG, INFO, etc.
-    format='%(asctime)s - %(levelname)s - %(message)s'  # Define the log message format
-)
+import requests
+from rest_framework import status
+from rest_framework.response import Response
+from rest_framework.views import APIView
 
-class QuoteViewSet(viewsets.ModelViewSet):
-    queryset = Quote.objects.all()
-    serializer_class = QuoteSerializer
+from ..models import Quote
+from ..serializers import QuoteSerializer
 
-    @action(detail=True, methods=['patch'], url_path='like')
-    def like(self, request, pk=None):
-        """
-        Custom action to increment the 'likes' field of a specific quote.
-        """
-        try:
-            # Retrieve the quote with the given ID (primary key).
-            quote = self.get_object()
-            quote.likes += 1
-            quote.save()
-            return Response(quote.likes, status=status.HTTP_200_OK)
-
-        except Quote.DoesNotExist:
-            return Response({'error': 'Quote not found'}, status=status.HTTP_404_NOT_FOUND)
-
+logger = logging.getLogger(__name__)
 
 class RandomQuoteView(APIView):
     def get(self, request, *args, **kwargs):
@@ -56,7 +33,7 @@ class RandomQuoteView(APIView):
 
         remaining_quotes = Quote.objects.exclude(id__in=ids_to_exclude)
 
-        if (len(remaining_quotes) < 2):
+        if (len(remaining_quotes) < 1):
             logging.info(f'Start fetching quotes almost all database quotes ({Quote.objects.count()}) are excluded {len(ids_to_exclude)}')
             self.fetch_and_add_zenquotes_to_db()
             remaining_quotes = Quote.objects.exclude(id__in=ids_to_exclude)

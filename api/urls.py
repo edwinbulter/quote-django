@@ -1,20 +1,24 @@
-from django.urls import include, path
-from rest_framework.routers import DefaultRouter
-from .views import QuoteViewSet, RandomQuoteView
+from django.urls import path
 
-# Create a router instance
-router = DefaultRouter()
-
-# Register the viewset with the router
-router.register(r'quote', QuoteViewSet, basename='quote')
+from .views.liked_quote_list_api_view import LikedQuoteListAPIView
+from .views.quote_detail_api_view import QuoteDetailAPIView
+from .views.quote_like_api_view import QuoteLikeAPIView
+from .views.quote_list_api_view import QuoteListAPIView
+from .views.random_quote_view import RandomQuoteView
 
 urlpatterns = [
-    # Include all automatically generated routes from the router
-    *router.urls,
+    # Retrieve all quotes
+    path('quotes', QuoteListAPIView.as_view(), name='quotes'),
 
-    # Add an alias for /quotes to also fetch all quotes
-    path('quotes', QuoteViewSet.as_view({'get': 'list'}), name='quote'),
+    # Retrieve all liked quotes
+    path('quote/liked', LikedQuoteListAPIView.as_view(), name='liked-quotes'),
 
-    # Add the specific path for RandomQuoteView
+    # Retrieve a single quote by its id
+    path('quote/<int:pk>', QuoteDetailAPIView.as_view(), name='quote-detail'),
+
+    # Like a specific quote
+    path('quote/<int:pk>/like', QuoteLikeAPIView.as_view(), name='like'),
+
+    # Retrieve a random quote by get or by post with a list of ids to exclude in the body
     path('quote', RandomQuoteView.as_view(), name='quote'),
 ]

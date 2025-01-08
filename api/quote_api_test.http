@@ -5,10 +5,13 @@ GET https://zenquotes.io/api/quotes
 GET https://zenquotes.io/api/random
 
 ### fetch a specific quote with GET
-GET http://localhost:8000/api/v1/quote/5
+GET http://localhost:8000/api/v1/quote/51
 
 ### fetch all quotes with GET
 GET http://localhost:8000/api/v1/quotes
+
+### fetch all liked quotes with GET
+GET http://localhost:8000/api/v1/quote/liked
 
 ### fetch random quote with GET
 GET http://localhost:8000/api/v1/quote
@@ -20,7 +23,14 @@ Content-Type: application/json
 [1,2,3,4,5]
 
 ### like a quote with PATCH and id
-PATCH http://localhost:8000/api/v1/quote/5/like/
+PATCH http://localhost:8000/api/v1/quote/5/like
 
+### stream liked quotes from quote_django (removed functionality)
+GET http://localhost:8000/api/v1/quote/stream
+Accept: text/event-stream
+
+### stream liked quotes from quote-server
+GET http://localhost:8181/api/v1/quote/stream
+Accept: text/event-stream
 
 

@@ -82,10 +82,11 @@ WSGI_APPLICATION = 'quote_django.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
+# Use a different database during tests
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'NAME': ':memory:',  # Use in-memory database for tests
     }
 }
 
@@ -131,6 +132,7 @@ STATIC_URL = 'static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+# Use console logging only during tests
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,  # Keep default Django logging too
@@ -145,22 +147,15 @@ LOGGING = {
             'class': 'logging.StreamHandler',
             'formatter': 'simple',
         },
-        # OPTIONAL: Log output to a file
-        'file': {
-            'level': 'DEBUG',
-            'class': 'logging.FileHandler',
-            'filename': 'django_project.log',
-            'formatter': 'simple',
-        },
     },
     'loggers': {
         'django': {  # Django's built-in logging
-            'handlers': ['console', 'file'],  # Send logs to both console and file
+            'handlers': ['console'],  # Send logs to both console and file
             'level': 'INFO',
             'propagate': True,
         },
         'myproject': {  # Your app/project-specific logger
-            'handlers': ['console', 'file'],
+            'handlers': ['console'],
             'level': 'DEBUG',  # DEBUG level for your custom code
             'propagate': False,
         },

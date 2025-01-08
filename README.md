@@ -36,3 +36,18 @@ Python project set up:
 - python manage.py migrate
 - Add 'rest_framework' and 'api' to INSTALLED_APPS in quote_django/settings.py
 - python manage.py createsuperuser --username admin --email admin@example.com
+
+Resolve the CORS issue caused by the frontend being hosted on a different URL than the API it interacts with.
+- poetry add django-cors-headers
+- add 'corsheaders' to INSTALLED_APPS in settings.py
+- add 'corsheaders.middleware.CorsMiddleware' to MIDDLEWARE at the top in settings.py
+- add 'django.middleware.common.CommonMiddleware' to MIDDLEWARE below the previous line in settings.py
+- add CORS_ALLOW_ALL_ORIGINS = True to settings.py
+
+Running tests:
+- poetry add pytest pytest-django
+- in fact tests decorated with @pytest.mark.django_db will use a temporary database. But to be absolutely sure pytest won't use the normal database, the following measures are taken:
+  - created the pytest.ini file which refers to test_settings.py
+  - in test_settings the database configured for in memory, logging for console only
+- to be able to use mocker in the tests:
+  - poetry add pytest-mock
