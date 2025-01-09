@@ -1,5 +1,5 @@
 # Django rest framework backend for the Quote app
-This application serves as a for the React frontend, which is available at:
+This application serves as the API backend for the React frontend, which is available at:
 https://github.com/edwinbulter/quote-web
 
 When launched, the API can be tested in IntelliJ using the file quote_api_test.http, located at
