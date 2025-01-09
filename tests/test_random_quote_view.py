@@ -30,14 +30,10 @@ def test_random_quote_view_excludes_quotes_in_ids_to_exclude():
     for nr in range (0,19):
         excludeList.append(quotes[nr].id)
 
-    print(excludeList)
-
     client = APIClient()
     response = client.post("/api/v1/quote",
                            data=json.dumps(excludeList),
                            content_type="application/json")
-
-    print(f'response.data={response.data}')
 
     assert response.status_code == status.HTTP_200_OK
     assert response.data.get("quoteText") == 'Quote19'
