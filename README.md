@@ -51,3 +51,83 @@ Running tests:
   - in test_settings the database configured for in memory, logging for console only
 - to be able to use mocker in the tests:
   - poetry add pytest-mock
+
+Prepare application for deployment:
+- create separate settings files for development, production and test in a settings folder
+- remove the original settings.py file
+- change the value of DJANGO_SETTINGS_MODULE in manage.py, pytest.ini, asgi.py and wsgi.py and into the specific settings file
+- run the unittests and test the development server to check if the right settings files are used
+- python manage.py migrate
+
+Deploy and test on Ubuntu:
+- apt install pipx
+- pipx install gunicorn
+- pipx ensurepath
+- Install Poetry for Dependency Management for all users:
+  - apt install python3-poetry
+    - Clone the project repository:
+      - cd /opt
+      - git clone https://github.com/edwinbulter/quote-django.git
+      - cd quote-django
+      - poetry install
+      - poetry shell
+- Configure gunicorn
+  - poetry add gunicorn
+  - create a Gunicorn systemd service:
+  - cd /etc/systemd/system
+  - vi quote-django.service
+    ```
+    [Unit]
+    Description=gunicorn daemon
+    After=network.target
+    
+    [Service]
+    User=root    #just for testing!
+    Group=root   #just for testing! 
+    WorkingDirectory=/opt/quote-django
+    ExecStart=/root/.cache/pypoetry/virtualenvs/quote-django-yHiKOEz2-py3.12/bin/gunicorn --workers 3 --bind unix:/run/gunicorn.sock quote_django.wsgi
+    # unix:/run/gunicorn.sock will let Nginx handle the HTTP traffic 
+    
+    [Install]
+    WantedBy=multi-user.target
+    ```
+  - Reload the systemd daemon and enable Gunicorn
+    - sudo systemctl daemon-reload
+    - sudo systemctl start quote-django
+    - sudo systemctl enable quote-django
+
+- Install and Configure Nginx
+  - apt install nginx
+  - vi /etc/nginx/sites-available/quote-django
+    ```
+    server {
+        listen 8001;
+        server_name localhost 127.0.0.1;
+    
+        location = /favicon.ico { access_log off; log_not_found off; }
+        location /static/ {
+            root /opt/quote-django;
+        }
+    
+        location / {
+        include proxy_params;
+            proxy_pass http://unix:/run/gunicorn.sock;
+        }
+    }
+    ```
+  - Create a symbolic link to enable the site
+    ```
+    ln -s /etc/nginx/sites-available/quote-django /etc/nginx/sites-enabled
+    ```
+  - Test Nginx configuration:
+    ```
+    sudo nginx -t
+    ```
+
+- restart nginx:
+  - sudo systemctl restart nginx
+- watch the logging of nginx:
+  - journalctl -u nginx
+- watch the logging of quote-django:
+  - journalctl -u qoute-django
+- now test some API requests from intellij or postman on port 8001
