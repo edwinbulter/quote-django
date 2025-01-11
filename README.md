@@ -19,7 +19,7 @@ Implemented features:
   - Liked quotes will be written on an event stream
   - Liked quotes will get their likes field incremented
 
-Python project set up:
+## Python project set up:
 - install pipx to be able to install (and uninstall if you ever want) django globally in its own virtual environment:
   - pip install --user pipx
 - install django with pipx: 
@@ -37,14 +37,14 @@ Python project set up:
 - Add 'rest_framework' and 'api' to INSTALLED_APPS in quote_django/settings.py
 - python manage.py createsuperuser --username admin --email admin@example.com
 
-Resolve the CORS issue caused by the frontend being hosted on a different URL than the API it interacts with.
+## Resolve the CORS issue caused by the frontend being hosted on a different URL than the API it interacts with.
 - poetry add django-cors-headers
 - add 'corsheaders' to INSTALLED_APPS in settings.py
 - add 'corsheaders.middleware.CorsMiddleware' to MIDDLEWARE at the top in settings.py
 - add 'django.middleware.common.CommonMiddleware' to MIDDLEWARE below the previous line in settings.py
 - add CORS_ALLOW_ALL_ORIGINS = True to settings.py
 
-Running tests:
+## Running tests:
 - poetry add pytest pytest-django
 - in fact tests decorated with @pytest.mark.django_db will use a temporary database. But to be absolutely sure pytest won't use the normal database, the following measures are taken:
   - created the pytest.ini file which refers to test_settings.py
@@ -52,14 +52,14 @@ Running tests:
 - to be able to use mocker in the tests:
   - poetry add pytest-mock
 
-Prepare application for deployment:
+## Prepare application for deployment:
 - create separate settings files for development, production and test in a settings folder
 - remove the original settings.py file
 - change the value of DJANGO_SETTINGS_MODULE in manage.py, pytest.ini, asgi.py and wsgi.py and into the specific settings file
 - run the unittests and test the development server to check if the right settings files are used
 - python manage.py migrate
 
-Deploy and test on Ubuntu:
+## Deploy and run quote-django as a systemd service:
 - apt install pipx
 - pipx install gunicorn
 - pipx ensurepath
@@ -82,8 +82,8 @@ Deploy and test on Ubuntu:
     After=network.target
     
     [Service]
-    User=root    #just for testing!
-    Group=root   #just for testing! 
+    User=root  #🙄 
+    Group=root #🙄
     WorkingDirectory=/opt/quote-django
     ExecStart=/root/.cache/pypoetry/virtualenvs/quote-django-yHiKOEz2-py3.12/bin/gunicorn --workers 3 --bind unix:/run/gunicorn.sock quote_django.wsgi
     # unix:/run/gunicorn.sock will let Nginx handle the HTTP traffic 
@@ -131,3 +131,74 @@ Deploy and test on Ubuntu:
 - watch the logging of quote-django:
   - journalctl -u qoute-django
 - now test some API requests from intellij or postman on port 8001
+
+## Deploy quote-django in a docker image
+- Add the gunicorn dependency
+  ```shell
+  poetry add gunicorn
+  ```
+- create requirements.txt 
+  ```
+  poetry export -f requirements.txt --output requirements.txt --without-hashes
+  ```
+- create a Dockerfile
+  ```dockerfile
+  # Use an official Python runtime as the base image
+  FROM python:3.12-slim
+  
+  # Set environment variables
+  ENV PYTHONUNBUFFERED=1 \
+      POETRY_VIRTUALENVS_IN_PROJECT=true \
+      POETRY_NO_INTERACTION=1
+  
+  # Set working directory inside the container
+  WORKDIR /app
+  
+  # Install system dependencies
+  RUN apt-get update && apt-get install -y \
+      build-essential \
+      curl \
+      libpq-dev \
+      --no-install-recommends && \
+      apt-get clean && rm -rf /var/lib/apt/lists/*
+  
+  # Install Poetry
+  RUN curl -sSL https://install.python-poetry.org | python3 -
+  
+  # Add Poetry to PATH
+  ENV PATH="/app/.venv/bin:/root/.local/bin:$PATH"
+  
+  # Copy the project files into the container
+  COPY ./pyproject.toml ./poetry.lock ./requirements.txt /app/
+  
+  # Install Python Dependencies
+  RUN poetry install --no-root
+  
+  # Copy the rest of the Django project into the app directory
+  COPY . /app
+  
+  # Expose the port your Django app runs on (default port 8000)
+  EXPOSE 8002
+  
+  # Command to run Django app with Gunicorn
+  CMD ["gunicorn", "--workers=3", "--bind=0.0.0.0:8002", "quote_django.wsgi:application"]
+  ```
+- create a .dockerignore file
+  ```dockerignore
+  *.pyc
+  *.pyo
+  *.pyd
+  __pycache__/
+  .pytest_cache/
+  .env
+  venv/
+  ```
+- build the docker image
+  ```shell
+  docker build -t quote-django .
+  ```
+- run the docker image
+  ```shell
+  docker run -p 8002:8002 quote-django
+  ```
+- now test some API requests from intellij or postman on port 8002
