@@ -30,9 +30,9 @@ pipeline {
                     docker ps -aq --filter "name=quote-django" | xargs -r docker rm
                     """
 
-                    // Run the container on port 8000 (or another port)
+                    // Run the container on port 8002 (or another port)
                     sh """
-                    docker run -d --name quote-django -p 8000:8000 ${env.IMAGE_TAG}
+                    docker run -d --name quote-django -p 8002:8002 ${env.IMAGE_TAG}
                     """
                 }
             }
