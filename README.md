@@ -141,58 +141,8 @@ Implemented features:
   ```
   poetry export -f requirements.txt --output requirements.txt --without-hashes
   ```
-- create a Dockerfile
-  ```dockerfile
-  # Use an official Python runtime as the base image
-  FROM python:3.12-slim
-  
-  # Set environment variables
-  ENV PYTHONUNBUFFERED=1 \
-      POETRY_VIRTUALENVS_IN_PROJECT=true \
-      POETRY_NO_INTERACTION=1
-  
-  # Set working directory inside the container
-  WORKDIR /app
-  
-  # Install system dependencies
-  RUN apt-get update && apt-get install -y \
-      build-essential \
-      curl \
-      libpq-dev \
-      --no-install-recommends && \
-      apt-get clean && rm -rf /var/lib/apt/lists/*
-  
-  # Install Poetry
-  RUN curl -sSL https://install.python-poetry.org | python3 -
-  
-  # Add Poetry to PATH
-  ENV PATH="/app/.venv/bin:/root/.local/bin:$PATH"
-  
-  # Copy the project files into the container
-  COPY ./pyproject.toml ./poetry.lock ./requirements.txt /app/
-  
-  # Install Python Dependencies
-  RUN poetry install --no-root
-  
-  # Copy the rest of the Django project into the app directory
-  COPY . /app
-  
-  # Expose the port your Django app runs on (default port 8000)
-  EXPOSE 8002
-  
-  # Command to run Django app with Gunicorn
-  CMD ["gunicorn", "--workers=3", "--bind=0.0.0.0:8002", "quote_django.wsgi:application"]
-  ```
-- create a .dockerignore file
-  ```dockerignore
-  *.pyc
-  *.pyo
-  *.pyd
-  __pycache__/
-  .pytest_cache/
-  .env
-  venv/
-  ```
+- create the [Dockerfile](./Dockerfile)
+- create the [.dockerignore file](./.dockerignore)
 - build the docker image
   ```shell
   docker build -t quote-django .
@@ -202,3 +152,13 @@ Implemented features:
   docker run -p 8002:8002 quote-django
   ```
 - now test some API requests from intellij or postman on port 8002
+
+## Create a Jenkins pipeline for building and deploying a docker image
+- Create the [Jenkinsfile](./Jenkinsfile)
+- Create a Pipeline job in Jenkins:
+  - Open Jenkins > New Item > Select Pipeline
+  - In the Pipeline configuration:
+    - Choose 'Pipeline script from SCM'
+    - Select your Git repository and branch
+    - Specify the path to your Jenkinsfile
+- Run the pipeline by clicking Build Now inthe Jenkins dashboard
