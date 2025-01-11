@@ -161,4 +161,4 @@ Implemented features:
     - Choose 'Pipeline script from SCM'
     - Select your Git repository and branch
     - Specify the path to your Jenkinsfile
-- Run the pipeline by clicking Build Now inthe Jenkins dashboard
+- Run the pipeline by clicking Build Now in the Jenkins dashboard
